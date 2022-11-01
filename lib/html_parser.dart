@@ -6,16 +6,10 @@ import 'package:csslib/parser.dart' as cssparser;
 import 'package:csslib/visitor.dart' as css;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_html/image_render.dart';
-import 'package:flutter_html/src/anchor.dart';
 import 'package:flutter_html/src/css_parser.dart';
 import 'package:flutter_html/src/html_elements.dart';
-import 'package:flutter_html/src/layout_element.dart';
-import 'package:flutter_html/src/navigation_delegate.dart';
 import 'package:flutter_html/src/utils.dart';
-import 'package:flutter_html/style.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
 import 'package:numerus/numerus.dart';
@@ -60,6 +54,7 @@ class HtmlParser extends StatelessWidget {
   final OnTap? _onAnchorTap;
   final TextSelectionControls? selectionControls;
   final ScrollPhysics? scrollPhysics;
+  final Style Function(Style)? finalizeStyle;
 
   final Map<String, Size> cachedImageSizes = {};
 
@@ -79,6 +74,7 @@ class HtmlParser extends StatelessWidget {
     required this.imageRenders,
     required this.tagsList,
     required this.navigationDelegateForIframe,
+    this.finalizeStyle,
     this.selectionControls,
     this.scrollPhysics,
   })  : this._onAnchorTap = onAnchorTap != null
@@ -107,7 +103,8 @@ class HtmlParser extends StatelessWidget {
         _applyInlineStyles(externalCssStyledTree ?? lexedTree, onCssParseError);
     StyledElement customStyledTree = _applyCustomStyles(style, inlineStyledTree);
     StyledElement cascadedStyledTree = _cascadeStyles(style, customStyledTree);
-    StyledElement cleanedTree = cleanTree(cascadedStyledTree);
+    StyledElement finalizedStyledTree = _finalizeStyles(finalizeStyle, cascadedStyledTree);
+    StyledElement cleanedTree = cleanTree(finalizedStyledTree);
     InlineSpan parsedTree = parseTree(
       RenderContext(
         buildContext: context,
@@ -300,6 +297,15 @@ class HtmlParser extends StatelessWidget {
       child.style = tree.style.copyOnlyInherited(child.style);
       _cascadeStyles(style, child);
     });
+
+    return tree;
+  }
+
+  static StyledElement _finalizeStyles(Style Function(Style)? finalizeStyle, StyledElement tree) {
+    if (finalizeStyle != null) {
+      tree.style = finalizeStyle(tree.style);
+      tree.children.forEach((e) => e.style = finalizeStyle(e.style));
+    }
 
     return tree;
   }

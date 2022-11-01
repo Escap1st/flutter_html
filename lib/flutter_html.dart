@@ -1,7 +1,6 @@
 library flutter_html;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_html/html_parser.dart';
 import 'package:flutter_html/image_render.dart';
 import 'package:flutter_html/src/html_elements.dart';
@@ -64,6 +63,7 @@ class Html extends StatelessWidget {
     this.tagsList = const [],
     this.style = const {},
     this.navigationDelegateForIframe,
+    this.finalizeStyle,
   })  : document = null,
         assert(data != null),
         _anchorKey = anchorKey ?? GlobalKey(),
@@ -85,6 +85,7 @@ class Html extends StatelessWidget {
     this.tagsList = const [],
     this.style = const {},
     this.navigationDelegateForIframe,
+    this.finalizeStyle,
   })  : data = null,
         assert(document != null),
         _anchorKey = anchorKey ?? GlobalKey(),
@@ -142,6 +143,8 @@ class Html extends StatelessWidget {
   /// to use NavigationDelegate.
   final NavigationDelegate? navigationDelegateForIframe;
 
+  final Style Function(Style)? finalizeStyle;
+
   static List<String> get tags => new List<String>.from(STYLED_ELEMENTS)
     ..addAll(INTERACTABLE_ELEMENTS)
     ..addAll(REPLACED_ELEMENTS)
@@ -175,6 +178,7 @@ class Html extends StatelessWidget {
           ..addAll(defaultImageRenders),
         tagsList: tagsList.isEmpty ? Html.tags : tagsList,
         navigationDelegateForIframe: navigationDelegateForIframe,
+        finalizeStyle: finalizeStyle,
       ),
     );
   }
