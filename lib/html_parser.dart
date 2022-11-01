@@ -304,7 +304,7 @@ class HtmlParser extends StatelessWidget {
   static StyledElement _finalizeStyles(Style Function(Style)? finalizeStyle, StyledElement tree) {
     if (finalizeStyle != null) {
       tree.style = finalizeStyle(tree.style);
-      tree.children.forEach((e) => e.style = finalizeStyle(e.style));
+      tree.children.forEach((e) => _finalizeStyles(finalizeStyle, e));
     }
 
     return tree;
